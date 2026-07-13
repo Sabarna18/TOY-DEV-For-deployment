@@ -8,9 +8,6 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: toydb
 
-    ports:
-      - "5432:5432"
-
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -28,14 +25,14 @@ services:
 
     container_name: toy-backend
 
-    ports:
-      - "8003:8003"
-
     env_file:
-      - ./backend/.env
+      - backend/.env
 
     environment:
       DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/toydb
+
+    expose:
+      - "8003"
 
     depends_on:
       postgres:
@@ -49,11 +46,23 @@ services:
 
     container_name: toy-frontend
 
+    expose:
+      - "80"
+
+    restart: unless-stopped
+
+  nginx:
+    build:
+      context: ./nginx
+
+    container_name: toy-nginx
+
     ports:
-      - "3002:3002"
+      - "80:80"
 
     depends_on:
       - backend
+      - frontend
 
     restart: unless-stopped
 
