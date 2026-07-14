@@ -4,7 +4,7 @@
 # Build React
 ####################################################
 
-FROM node:22-alpine AS builder
+FROM node:26-alpine AS builder
 
 LABEL org.opencontainers.image.title="Toy Dev Web"
 
