@@ -13,42 +13,114 @@ echo "========================================="
 
 cd frontend
 
-echo ""
-echo "[1/6] Node Environment"
+#########################################################
+# Environment Information
+#########################################################
 
+echo ""
+echo "[0/7] Environment"
+
+echo "Working Directory:"
+pwd
+
+echo ""
+echo "Node Version:"
 node --version
+
+echo ""
+echo "NPM Version:"
 npm --version
 
 echo ""
-echo "[2/6] Installing Dependencies"
-
-npm ci
+echo "NODE_ENV=${NODE_ENV:-<not set>}"
 
 echo ""
-echo "[3/6] ESLint"
+echo "NPM omit:"
+npm config get omit || true
+
+echo ""
+echo "Package Manager Config:"
+npm config list
+
+#########################################################
+# Package Verification
+#########################################################
+
+echo ""
+echo "[1/7] Verify package.json"
+
+cat package.json
+
+#########################################################
+# Install Dependencies
+#########################################################
+
+echo ""
+echo "[2/7] Installing Dependencies"
+
+# Force installation of devDependencies even if NODE_ENV=production
+npm ci --include=dev
+
+#########################################################
+# Verify Installation
+#########################################################
+
+echo ""
+echo "[3/7] Installed Packages"
+
+npm ls --depth=0 || true
+
+echo ""
+echo "Checking ESLint..."
+
+if [ -f node_modules/.bin/eslint ]; then
+    echo "✓ ESLint installed"
+else
+    echo "✗ ESLint NOT installed"
+    exit 1
+fi
+
+#########################################################
+# ESLint
+#########################################################
+
+echo ""
+echo "[4/7] ESLint"
 
 if npm run | grep -q "lint"; then
     npm run lint
 else
-    echo "No lint script found. Skipping."
+    echo "No lint script found."
 fi
 
+#########################################################
+# Tests
+#########################################################
+
 echo ""
-echo "[4/6] Frontend Tests"
+echo "[5/7] Frontend Tests"
 
 if npm run | grep -q "test"; then
     npm test
 else
-    echo "No test script found. Skipping."
+    echo "No test script found."
 fi
 
+#########################################################
+# Production Build
+#########################################################
+
 echo ""
-echo "[5/6] Production Build"
+echo "[6/7] Production Build"
 
 npm run build
 
+#########################################################
+# Finish
+#########################################################
+
 echo ""
-echo "[6/6] Frontend Verification Complete"
+echo "[7/7] Frontend Verification Complete"
 
 echo ""
 echo "========================================="
