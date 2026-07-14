@@ -1,3 +1,4 @@
+```yaml
 name: Release
 
 on:
@@ -21,30 +22,47 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
+
   ###############################################################
-  # Build & Publish
+  # Publish Docker Images
   ###############################################################
 
   publish:
-    name: Build and Publish Images
+
+    name: Publish Docker Images
 
     runs-on: ubuntu-latest
 
-    timeout-minutes: 30
+    timeout-minutes: 40
+
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
 
     outputs:
       backend-image: ${{ steps.backend_meta.outputs.tags }}
       web-image: ${{ steps.web_meta.outputs.tags }}
 
     steps:
+
+      #########################################################
+      # Checkout
+      #########################################################
+
       - name: Checkout Repository
         uses: actions/checkout@v4
 
       #########################################################
+      # Buildx
+      #########################################################
 
-      - name: Set up Docker Buildx
+      - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      #########################################################
+      # Login
       #########################################################
 
       - name: Login to GitHub Container Registry
@@ -55,42 +73,69 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       #########################################################
+      # Backend Metadata
+      #########################################################
 
-      - name: Extract Backend Metadata
+      - name: Backend Metadata
         id: backend_meta
         uses: docker/metadata-action@v5
+
         with:
-          images: ghcr.io/${{ github.repository_owner }}/toy-dev-backend
+          images: |
+            ghcr.io/${{ github.repository_owner }}/toy-dev-backend
+
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=sha
             type=raw,value=latest
 
+          labels: |
+            org.opencontainers.image.title=Toy Dev Backend
+            org.opencontainers.image.description=Toy Dev Backend API
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.version=${{ github.ref_name }}
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      #########################################################
+      # Web Metadata
       #########################################################
 
-      - name: Extract Web Metadata
+      - name: Web Metadata
         id: web_meta
         uses: docker/metadata-action@v5
+
         with:
-          images: ghcr.io/${{ github.repository_owner }}/toy-dev-web
+          images: |
+            ghcr.io/${{ github.repository_owner }}/toy-dev-web
+
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=sha
             type=raw,value=latest
 
+          labels: |
+            org.opencontainers.image.title=Toy Dev Web
+            org.opencontainers.image.description=Toy Dev Frontend
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.version=${{ github.ref_name }}
+            org.opencontainers.image.revision=${{ github.sha }}
+
       #########################################################
-      # Backend
+      # Publish Backend
       #########################################################
 
       - name: Publish Backend Image
         uses: docker/build-push-action@v6
+
         with:
           context: ./backend
           file: ./backend/Dockerfile
 
           push: true
+
+          platforms: linux/amd64
 
           provenance: true
           sbom: true
@@ -98,20 +143,23 @@ jobs:
           tags: ${{ steps.backend_meta.outputs.tags }}
           labels: ${{ steps.backend_meta.outputs.labels }}
 
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
 
       #########################################################
-      # Web
+      # Publish Web
       #########################################################
 
       - name: Publish Web Image
         uses: docker/build-push-action@v6
+
         with:
           context: .
           file: ./nginx/Dockerfile
 
           push: true
+
+          platforms: linux/amd64
 
           provenance: true
           sbom: true
@@ -119,15 +167,38 @@ jobs:
           tags: ${{ steps.web_meta.outputs.tags }}
           labels: ${{ steps.web_meta.outputs.labels }}
 
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+
+      #########################################################
+      # Summary
+      #########################################################
+
+      - name: Publish Summary
+
+        shell: bash
+
+        run: |
+
+          set -euo pipefail
+
+          {
+            echo "# Docker Images Published"
+            echo ""
+            echo "## Backend"
+            echo "${{ steps.backend_meta.outputs.tags }}"
+            echo ""
+            echo "## Web"
+            echo "${{ steps.web_meta.outputs.tags }}"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   ###############################################################
   # GitHub Release
   ###############################################################
 
   github-release:
-    name: Publish GitHub Release
+
+    name: GitHub Release
 
     runs-on: ubuntu-latest
 
@@ -137,11 +208,11 @@ jobs:
       contents: write
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
 
-      - name: Create Release
+      - name: Create GitHub Release
+
         uses: softprops/action-gh-release@v2
+
         with:
           generate_release_notes: true
 
@@ -151,17 +222,25 @@ jobs:
 
           files: |
             README.md
-            compose.yaml
+            compose.production.yaml
 
       - name: Release Summary
+
+        shell: bash
+
         run: |
 
-          echo "# Release Completed" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          set -euo pipefail
 
-          echo "## Published Images" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          echo "${{ needs.publish.outputs.backend-image }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "${{ needs.publish.outputs.web-image }}" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "# Release Completed"
+            echo ""
+            echo "## Backend Image"
+            echo "${{ needs.publish.outputs.backend-image }}"
+            echo ""
+            echo "## Web Image"
+            echo "${{ needs.publish.outputs.web-image }}"
+            echo ""
+            echo "Release Tag: ${{ github.ref_name }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+```
