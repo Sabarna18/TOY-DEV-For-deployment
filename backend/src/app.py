@@ -1,11 +1,11 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.settings import settings
-from src.server import router
-
 from logger import get_logger
-
+from src.server import router
+from src.settings import settings
 
 logger = get_logger(__name__)
 
@@ -43,7 +43,8 @@ logger.info("CORS middleware configured")
 # Startup
 # ==================================================
 
-from contextlib import asynccontextmanager
+
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
