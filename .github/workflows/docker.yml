@@ -67,6 +67,25 @@ jobs:
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
 
+
+
+      #########################################################
+      # Build Web Image (Validation Only)
+      #########################################################
+        
+      - name: Generate backend .env
+
+        run: |
+          cat > backend/.env <<EOF
+          APP_NAME=Toy Deployment App
+          ENVIRONMENT=development
+          DATABASE_URL=postgresql+psycopg://postgres:postgres@postgres:5432/toydb
+          API_HOST=127.0.0.1
+          API_PORT=8000
+          LOG_LEVEL=INFO
+          CORS_ORIGINS=http://localhost:3002
+          EOF
+
       #########################################################
       # Compose Validation
       #########################################################
