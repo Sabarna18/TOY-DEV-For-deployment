@@ -44,15 +44,12 @@ logger.info("CORS middleware configured")
 # ==================================================
 
 
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info(
-        f"{settings.APP_NAME} started in {settings.ENVIRONMENT} mode"
-    )
+    logger.info(f"{settings.APP_NAME} started in {settings.ENVIRONMENT} mode")
     yield
     logger.info("Application shutdown")
+
 
 app = FastAPI(
     title=settings.APP_NAME,

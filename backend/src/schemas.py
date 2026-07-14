@@ -10,5 +10,6 @@ class TaskResponse(BaseModel):
     id: int
     title: str
     description: str | None = None
+
     class Config:
         from_attributes = True

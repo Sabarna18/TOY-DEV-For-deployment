@@ -20,11 +20,7 @@ if config.config_file_name is not None:
 # --------------------------------------------------
 
 
-
-config.set_main_option(
-    "sqlalchemy.url",
-    settings.DATABASE_URL
-)
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 # --------------------------------------------------
 # Import Models
@@ -41,6 +37,7 @@ target_metadata = Base.metadata
 # Offline Migrations
 # --------------------------------------------------
 
+
 def run_migrations_offline() -> None:
     """
     Run migrations in 'offline' mode.
@@ -53,9 +50,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         compare_type=True,
-        dialect_opts={
-            "paramstyle": "named"
-        },
+        dialect_opts={"paramstyle": "named"},
     )
 
     with context.begin_transaction():
@@ -65,6 +60,7 @@ def run_migrations_offline() -> None:
 # --------------------------------------------------
 # Online Migrations
 # --------------------------------------------------
+
 
 def run_migrations_online() -> None:
     """

@@ -66,10 +66,14 @@ fi
 echo ""
 echo "[8/8] Pytest"
 
-if [ -d tests ]; then
-    uv run pytest -v
+if [ -d tests ] && find tests -name "test_*.py" | grep -q .; then
+    echo ""
+    echo "[8/8] Pytest"
+    uv run pytest
 else
-    echo "No tests directory found. Skipping."
+    echo ""
+    echo "[8/8] Pytest"
+    echo "No tests found. Skipping."
 fi
 
 echo ""
