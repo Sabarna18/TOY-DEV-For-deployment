@@ -1,4 +1,4 @@
-```yaml
+
 name: Release
 
 on:
@@ -243,4 +243,4 @@ jobs:
             echo ""
             echo "Release Tag: ${{ github.ref_name }}"
           } >> "$GITHUB_STEP_SUMMARY"
-```
+
