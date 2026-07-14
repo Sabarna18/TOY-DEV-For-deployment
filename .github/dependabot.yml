@@ -1,0 +1,157 @@
+version: 2
+
+updates:
+  #########################################################
+  # Backend (Python / uv)
+  #########################################################
+
+  - package-ecosystem: "pip"
+
+    directory: "/backend"
+
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:00"
+      timezone: "UTC"
+
+    labels:
+      - dependencies
+      - backend
+      - python
+
+    assignees:
+      - Sabarna18
+
+    reviewers:
+      - Sabarna18
+
+    commit-message:
+      prefix: "deps"
+
+    open-pull-requests-limit: 5
+
+    groups:
+      python-dependencies:
+        patterns:
+          - "*"
+
+  #########################################################
+  # Frontend (npm)
+  #########################################################
+
+  - package-ecosystem: "npm"
+
+    directory: "/frontend"
+
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:15"
+      timezone: "UTC"
+
+    labels:
+      - dependencies
+      - frontend
+      - npm
+
+    assignees:
+      - Sabarna18
+
+    reviewers:
+      - Sabarna18
+
+    commit-message:
+      prefix: "deps"
+
+    open-pull-requests-limit: 5
+
+    groups:
+      npm-dependencies:
+        patterns:
+          - "*"
+
+  #########################################################
+  # GitHub Actions
+  #########################################################
+
+  - package-ecosystem: "github-actions"
+
+    directory: "/"
+
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:30"
+      timezone: "UTC"
+
+    labels:
+      - dependencies
+      - github-actions
+
+    assignees:
+      - Sabarna18
+
+    reviewers:
+      - Sabarna18
+
+    commit-message:
+      prefix: "ci"
+
+    open-pull-requests-limit: 3
+
+  #########################################################
+  # Docker
+  #########################################################
+
+  - package-ecosystem: "docker"
+
+    directory: "/backend"
+
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:45"
+      timezone: "UTC"
+
+    labels:
+      - dependencies
+      - docker
+
+    assignees:
+      - Sabarna18
+
+    reviewers:
+      - Sabarna18
+
+    commit-message:
+      prefix: "docker"
+
+    open-pull-requests-limit: 2
+
+  #########################################################
+
+  - package-ecosystem: "docker"
+
+    directory: "/nginx"
+
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:50"
+      timezone: "UTC"
+
+    labels:
+      - dependencies
+      - docker
+
+    assignees:
+      - Sabarna18
+
+    reviewers:
+      - Sabarna18
+
+    commit-message:
+      prefix: "docker"
+
+    open-pull-requests-limit: 2

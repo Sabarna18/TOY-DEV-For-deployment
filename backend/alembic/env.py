@@ -1,9 +1,10 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from sqlalchemy import engine_from_config, pool
 
 from alembic import context
+from src.database import Base
+from src.settings import settings
 
 # --------------------------------------------------
 # Alembic Config
@@ -18,19 +19,13 @@ if config.config_file_name is not None:
 # Import Application Settings
 # --------------------------------------------------
 
-from src.settings import settings
 
-config.set_main_option(
-    "sqlalchemy.url",
-    settings.DATABASE_URL
-)
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 # --------------------------------------------------
 # Import Models
 # --------------------------------------------------
 
-from src.database import Base
-from src.models import Task
 
 # --------------------------------------------------
 # Metadata
@@ -41,6 +36,7 @@ target_metadata = Base.metadata
 # --------------------------------------------------
 # Offline Migrations
 # --------------------------------------------------
+
 
 def run_migrations_offline() -> None:
     """
@@ -54,9 +50,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         compare_type=True,
-        dialect_opts={
-            "paramstyle": "named"
-        },
+        dialect_opts={"paramstyle": "named"},
     )
 
     with context.begin_transaction():
@@ -66,6 +60,7 @@ def run_migrations_offline() -> None:
 # --------------------------------------------------
 # Online Migrations
 # --------------------------------------------------
+
 
 def run_migrations_online() -> None:
     """

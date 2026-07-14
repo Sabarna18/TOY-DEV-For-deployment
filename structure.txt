@@ -1,0 +1,63 @@
+Toy-dev
+│
+├── .github
+│   │
+│   ├── workflows
+│   │      │
+│   │      ├── ci.yml
+│   │      ├── docker.yml
+│   │      ├── release.yml
+│   │      ├── deploy.yml
+│   │      └── security.yml
+│   │
+│   ├── ISSUE_TEMPLATE
+│   │
+│   └── PULL_REQUEST_TEMPLATE.md
+│
+├── scripts
+│   │
+│   ├── backend.sh
+│   ├── frontend.sh
+│   ├── docker.sh
+│   └── deploy.sh
+│
+├── backend
+│
+├── frontend
+│
+├── nginx
+│
+├── compose.yaml
+│
+└── README.md
+
+
+
+
+
+CI
+│
+├── Verify code
+├── Build application
+└── Verify Docker
+
+Release
+│
+├── Version
+├── Build images
+├── Push GHCR
+└── GitHub Release
+
+Security
+│
+├── Python Audit
+├── Node Audit
+├── Container Scan
+└── CodeQL
+
+Deploy
+│
+├── Pull Images
+├── Deploy
+├── Health Check
+└── Rollback (future)
