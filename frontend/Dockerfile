@@ -1,20 +1,17 @@
-# ---------- Build Stage ----------
-FROM node:22-alpine AS builder
+# ==================================================
+# React Builder Image
+# Used only for development/testing
+# Production build happens in nginx/Dockerfile
+# ==================================================
+
+FROM node:22-alpine
 
 WORKDIR /app
 
 COPY package*.json ./
+
 RUN npm ci
 
 COPY . .
 
-RUN npm run build
-
-# ---------- Runtime Stage ----------
-FROM nginx:alpine
-
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["npm","run","dev","--","--host","0.0.0.0"]

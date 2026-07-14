@@ -14,9 +14,13 @@ logger = get_logger(__name__)
 # FastAPI App
 # ==================================================
 
+
 app = FastAPI(
     title=settings.APP_NAME,
     version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
 )
 
 
@@ -39,13 +43,21 @@ logger.info("CORS middleware configured")
 # Startup
 # ==================================================
 
-@app.on_event("startup")
-async def startup_event():
+from contextlib import asynccontextmanager
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     logger.info(
-        f"{settings.APP_NAME} started "
-        f"in {settings.ENVIRONMENT} mode"
+        f"{settings.APP_NAME} started in {settings.ENVIRONMENT} mode"
     )
+    yield
+    logger.info("Application shutdown")
+
+app = FastAPI(
+    title=settings.APP_NAME,
+    version="1.0.0",
+    lifespan=lifespan,
+)
 
 
 # ==================================================

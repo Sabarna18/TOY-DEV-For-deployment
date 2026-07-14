@@ -1,6 +1,7 @@
 services:
   postgres:
     image: postgres:17
+
     container_name: toy-postgres
 
     environment:
@@ -18,6 +19,9 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+    networks:
+      - toy-network
 
   backend:
     build:
@@ -40,31 +44,51 @@ services:
 
     restart: unless-stopped
 
-  frontend:
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8003/api/v1/health')",
+        ]
+
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    networks:
+      - toy-network
+
+  web:
     build:
-      context: ./frontend
+      context: .
 
-    container_name: toy-frontend
+      dockerfile: nginx/Dockerfile
 
-    expose:
-      - "80"
-
-    restart: unless-stopped
-
-  nginx:
-    build:
-      context: ./nginx
-
-    container_name: toy-nginx
+    container_name: toy-web
 
     ports:
       - "80:80"
 
     depends_on:
-      - backend
-      - frontend
+      backend:
+        condition: service_healthy
 
     restart: unless-stopped
 
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost"]
+
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    networks:
+      - toy-network
+
 volumes:
   postgres_data:
+
+networks:
+  toy-network:

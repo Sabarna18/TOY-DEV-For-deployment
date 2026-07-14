@@ -1,0 +1,171 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - "feature/**"
+
+  pull_request:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONUNBUFFERED: "1"
+  NODE_ENV: production
+
+jobs:
+  # ==========================================================
+  # Backend
+  # ==========================================================
+
+  backend:
+    name: Backend Verification
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Cache uv
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ hashFiles('backend/uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-
+
+      - name: Make Backend Script Executable
+        run: chmod +x scripts/backend.sh
+
+      - name: Run Backend Pipeline
+        run: ./scripts/backend.sh
+
+      - name: Upload Backend Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-logs
+          path: backend/logs
+          if-no-files-found: ignore
+
+  # ==========================================================
+  # Frontend
+  # ==========================================================
+
+  frontend:
+    name: Frontend Verification
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Make Frontend Script Executable
+        run: chmod +x scripts/frontend.sh
+
+      - name: Run Frontend Pipeline
+        run: ./scripts/frontend.sh
+
+      - name: Upload Frontend Build (if present)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          if-no-files-found: ignore
+
+  # ==========================================================
+  # Docker
+  # ==========================================================
+
+  docker:
+    name: Docker Verification
+
+    needs:
+      - backend
+      - frontend
+
+    uses: ./.github/workflows/docker.yml
+
+  # ==========================================================
+  # Summary
+  # ==========================================================
+
+  summary:
+    name: CI Summary
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 5
+
+    needs:
+      - backend
+      - frontend
+      - docker
+
+    steps:
+      - name: Generate Workflow Summary
+
+        run: |
+
+          echo "# Continuous Integration Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "Repository: ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "Branch: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Finish
+
+        run: |
+
+          echo ""
+          echo "=========================================="
+          echo " Continuous Integration Successful"
+          echo "=========================================="
+          echo ""
