@@ -43,15 +43,25 @@ function App() {
   }
 
   useEffect(() => {
-    loadTasks();
+    const initialize = async () => {
+      try {
+        const [tasksData, healthData] = await Promise.all([
+          getTasks(),
+          checkHealth(),
+        ]);
 
-    checkHealth()
-      .then(setHealth)
-      .catch(() =>
+        setTasks(tasksData);
+        setHealth(healthData);
+      } catch (error) {
+        console.error(error);
+
         setHealth({
           status: "backend unavailable",
-        }),
-      );
+        });
+      }
+    };
+
+    initialize();
   }, []);
 
   return (

@@ -12,16 +12,8 @@ LOG_FILE = "logs/app.log"
 
 logging.basicConfig(
     level=getattr(logging, settings.LOG_LEVEL),
-    format=(
-        "%(asctime)s | "
-        "%(levelname)s | "
-        "%(name)s | "
-        "%(message)s"
-    ),
-    handlers=[
-        logging.FileHandler(LOG_FILE),
-        logging.StreamHandler()
-    ]
+    format=("%(asctime)s | " "%(levelname)s | " "%(name)s | " "%(message)s"),
+    handlers=[logging.FileHandler(LOG_FILE), logging.StreamHandler()],
 )
 
 
