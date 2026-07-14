@@ -32,21 +32,34 @@ dev = [
 # ==========================================================
 
 [tool.black]
-
 line-length = 88
 target-version = ["py313"]
+
+extend-exclude = '''
+(
+    ^/alembic/versions
+  | ^/.venv
+)
+'''
 
 # ==========================================================
 # Ruff
 # ==========================================================
 
 [tool.ruff]
-
 line-length = 88
 target-version = "py313"
 
-[tool.ruff.lint]
+exclude = [
+    ".venv",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    "alembic/versions",
+]
 
+[tool.ruff.lint]
 select = [
     "E",
     "F",
@@ -55,18 +68,20 @@ select = [
     "B",
 ]
 
+ignore = [
+    "B008",
+]
+
+fixable = ["ALL"]
+
 # ==========================================================
 # Pytest
 # ==========================================================
 
 [tool.pytest.ini_options]
-
 testpaths = ["tests"]
-
-python_files = [
-    "test_*.py",
-]
-
+python_files = ["test_*.py"]
+pythonpath = ["."]
 addopts = "-ra"
 
 # ==========================================================
@@ -74,11 +89,13 @@ addopts = "-ra"
 # ==========================================================
 
 [tool.mypy]
-
 python_version = "3.13"
 
 ignore_missing_imports = true
-
+check_untyped_defs = true
 warn_unused_configs = true
 
-check_untyped_defs = true
+exclude = [
+    "^alembic/",
+    "^\\.venv/",
+]

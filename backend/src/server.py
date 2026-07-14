@@ -1,12 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from logger import get_logger
 from src.database import SessionLocal
 from src.models import Task
 from src.schemas import TaskCreate, TaskResponse
-
-from logger import get_logger
-
 
 logger = get_logger(__name__)
 
