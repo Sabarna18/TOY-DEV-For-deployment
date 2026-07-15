@@ -43,6 +43,7 @@ jobs:
     outputs:
       backend-image: ${{ steps.backend_meta.outputs.tags }}
       web-image: ${{ steps.web_meta.outputs.tags }}
+      version: ${{ github.ref_name }}
 
     steps:
 
@@ -87,7 +88,6 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=sha
-            type=raw,value=latest
 
           labels: |
             org.opencontainers.image.title=Toy Dev Backend
@@ -112,7 +112,6 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=sha
-            type=raw,value=latest
 
           labels: |
             org.opencontainers.image.title=Toy Dev Web
@@ -191,6 +190,23 @@ jobs:
             echo "${{ steps.web_meta.outputs.tags }}"
           } >> "$GITHUB_STEP_SUMMARY"
 
+
+      #########################################################
+      # Generate Deployment Manifest
+      #########################################################
+
+      - name: Generate Deployment Manifest
+
+        run: |
+
+          cat > deployment.json <<EOF
+          {
+            "version": "${{ github.ref_name }}",
+            "backend": "ghcr.io/${{ github.repository_owner }}/toy-dev-backend:${{ github.ref_name }}",
+            "web": "ghcr.io/${{ github.repository_owner }}/toy-dev-web:${{ github.ref_name }}"
+          }
+          EOF
+
   ###############################################################
   # GitHub Release
   ###############################################################
@@ -222,6 +238,7 @@ jobs:
           files: |
             README.md
             compose.production.yaml
+            deployment.json
 
       - name: Release Summary
 
