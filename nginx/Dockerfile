@@ -30,6 +30,10 @@ LABEL org.opencontainers.image.title="Toy Dev Web"
 LABEL org.opencontainers.image.description="React + Nginx"
 LABEL org.opencontainers.image.vendor="Sabarna Guha"
 
+RUN apk update && \
+    apk upgrade --no-cache && \
+    rm -rf /var/cache/apk/*
+
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
 
 COPY --from=builder \
@@ -38,4 +42,4 @@ COPY --from=builder \
 
 EXPOSE 80
 
-CMD ["nginx","-g","daemon off;"]
+CMD ["nginx", "-g", "daemon off;"]
