@@ -1,0 +1,113 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows:
+      - Release
+    types:
+      - completed
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+jobs:
+
+  deploy:
+
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    name: Deploy Production
+
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 15
+
+    steps:
+
+      #########################################################
+      # Checkout
+      #########################################################
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      #########################################################
+      # Install Railway CLI
+      #########################################################
+
+      - name: Install Railway CLI
+
+        run: |
+
+          npm install -g @railway/cli
+
+      #########################################################
+      # Authenticate Railway
+      #########################################################
+
+      - name: Authenticate
+
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+        run: |
+
+          railway whoami
+
+      #########################################################
+      # Deploy Backend
+      #########################################################
+
+      - name: Deploy Backend
+
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+        run: |
+
+          railway up \
+            --service "${{ secrets.RAILWAY_SERVICE }}" \
+            --detach
+
+      #########################################################
+      # Health Check
+      #########################################################
+
+      - name: Wait for Deployment
+
+        run: sleep 30
+
+      - name: Backend Health Check
+
+        run: |
+
+          curl \
+            --fail \
+            "${{ secrets.BACKEND_URL }}/api/v1/health"
+
+      #########################################################
+      # Summary
+      #########################################################
+
+      - name: Deployment Summary
+
+        run: |
+
+          echo "# Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "| Service | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Railway Backend | ✅ |" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Production URL:" >> $GITHUB_STEP_SUMMARY
+          echo "${{ secrets.BACKEND_URL }}" >> $GITHUB_STEP_SUMMARY
