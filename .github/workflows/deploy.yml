@@ -111,3 +111,5 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Production URL:" >> $GITHUB_STEP_SUMMARY
           echo "${{ secrets.BACKEND_URL }}" >> $GITHUB_STEP_SUMMARY
+
+  #local test workflow_dispatch:
