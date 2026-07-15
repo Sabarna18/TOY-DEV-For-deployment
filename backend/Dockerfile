@@ -2,6 +2,10 @@
 
 FROM python:3.13-slim
 
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    rm -rf /var/lib/apt/lists/*
+
 LABEL org.opencontainers.image.title="Toy Dev Backend"
 LABEL org.opencontainers.image.description="FastAPI Backend"
 LABEL org.opencontainers.image.vendor="Sabarna Guha"
