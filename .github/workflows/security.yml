@@ -117,7 +117,7 @@ jobs:
 
       - name: Scan Backend
 
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
 
         with:
           image-ref: backend-security:latest
@@ -149,7 +149,7 @@ jobs:
 
       - name: Scan Web
 
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
 
         with:
           image-ref: web-security:latest
