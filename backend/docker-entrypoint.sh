@@ -36,5 +36,5 @@ echo ""
 exec uv run uvicorn \
     src.app:app \
     --host 0.0.0.0 \
-    --port 8003 \
+    --port "${PORT:-8003}" \
     --proxy-headers
