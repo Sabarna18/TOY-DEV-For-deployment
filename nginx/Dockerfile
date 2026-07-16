@@ -10,6 +10,10 @@ LABEL org.opencontainers.image.title="Toy Dev Web"
 
 WORKDIR /frontend
 
+# Build-time API endpoint
+ARG VITE_API_URL
+ENV VITE_API_URL=${VITE_API_URL}
+
 COPY frontend/package*.json ./
 
 RUN --mount=type=cache,target=/root/.npm \

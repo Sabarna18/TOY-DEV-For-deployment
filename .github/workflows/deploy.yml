@@ -13,32 +13,22 @@ permissions:
   contents: read
 
 concurrency:
-  group: deploy-production
+  group: production-deploy
   cancel-in-progress: true
 
 jobs:
-
   deploy:
+    name: Deploy Production
 
     if: >
       github.event_name == 'workflow_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
 
-    name: Deploy Production
-
     runs-on: ubuntu-latest
 
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
-
-      #########################################################
-      # Checkout
-      #########################################################
-
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
       #########################################################
       # Install Railway CLI
       #########################################################
@@ -50,10 +40,10 @@ jobs:
           npm install -g @railway/cli
 
       #########################################################
-      # Authenticate Railway
+      # Authenticate
       #########################################################
 
-      - name: Authenticate
+      - name: Authenticate Railway
 
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
@@ -63,53 +53,82 @@ jobs:
           railway whoami
 
       #########################################################
-      # Deploy Backend
+      # Redeploy Backend
       #########################################################
 
-      - name: Deploy Backend
+      - name: Redeploy Backend
 
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
         run: |
 
-          railway up \
-            --service "${{ secrets.RAILWAY_SERVICE }}" \
-            --detach
+          railway redeploy \
+            --service "${{ secrets.RAILWAY_BACKEND_SERVICE }}" \
+            --yes
 
       #########################################################
-      # Health Check
+      # Redeploy Frontend
+      #########################################################
+
+      - name: Redeploy Frontend
+
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+        run: |
+
+          railway redeploy \
+            --service "${{ secrets.RAILWAY_FRONTEND_SERVICE }}" \
+            --yes
+
+      #########################################################
+      # Wait for rollout
       #########################################################
 
       - name: Wait for Deployment
 
-        run: sleep 30
+        run: |
+
+          echo "Waiting for Railway deployment..."
+
+          sleep 45
+
+      #########################################################
+      # Backend Health Check
+      #########################################################
 
       - name: Backend Health Check
+
+        env:
+          BACKEND_URL: ${{ secrets.BACKEND_URL }}
 
         run: |
 
           curl \
             --fail \
-            "${{ secrets.BACKEND_URL }}/api/v1/health"
+            --retry 15 \
+            --retry-delay 5 \
+            --retry-all-errors \
+            "$BACKEND_URL/api/v1/health"
 
       #########################################################
-      # Summary
+      # Deployment Summary
       #########################################################
 
       - name: Deployment Summary
 
         run: |
 
-          echo "# Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          echo "| Service | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Railway Backend | ✅ |" >> $GITHUB_STEP_SUMMARY
-
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Production URL:" >> $GITHUB_STEP_SUMMARY
-          echo "${{ secrets.BACKEND_URL }}" >> $GITHUB_STEP_SUMMARY
-
-  #local test workflow_dispatch:
+          {
+            echo "# 🚀 Production Deployment"
+            echo ""
+            echo "| Component | Status |"
+            echo "|-----------|--------|"
+            echo "| Backend | ✅ |"
+            echo "| Frontend | ✅ |"
+            echo "| Health Check | ✅ |"
+            echo ""
+            echo "Backend URL:"
+            echo "${{ secrets.BACKEND_URL }}"
+          } >> "$GITHUB_STEP_SUMMARY"

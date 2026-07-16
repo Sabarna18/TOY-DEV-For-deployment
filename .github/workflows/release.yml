@@ -111,7 +111,6 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/toy-dev-web
 
           tags: |
-            type=ref,event=tag
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=sha
@@ -161,6 +160,9 @@ jobs:
 
           push: true
 
+          build-args: |
+            VITE_API_URL=${{ vars.VITE_API_URL }}
+
           platforms: linux/amd64
 
           provenance: true
@@ -201,15 +203,31 @@ jobs:
 
       - name: Generate Deployment Manifest
 
+        shell: bash
+
         run: |
+
+          VERSION="${GITHUB_REF_NAME#v}"
 
           cat > deployment.json <<EOF
           {
-            "version": "${{ github.ref_name }}",
-            "backend": "ghcr.io/${{ github.repository_owner }}/toy-dev-backend:${{ github.ref_name }}",
-            "web": "ghcr.io/${{ github.repository_owner }}/toy-dev-web:${{ github.ref_name }}"
+            "version": "${VERSION}",
+            "backend": "ghcr.io/${{ github.repository_owner }}/toy-dev-backend:${VERSION}",
+            "web": "ghcr.io/${{ github.repository_owner }}/toy-dev-web:${VERSION}"
           }
           EOF
+
+
+      #########################################################
+      # Upload Deployment Manifest
+      #########################################################
+
+      - name: Upload Deployment Manifest
+        uses: actions/upload-artifact@v4
+
+        with:
+          name: deployment-manifest
+          path: deployment.json
 
   ###############################################################
   # GitHub Release
