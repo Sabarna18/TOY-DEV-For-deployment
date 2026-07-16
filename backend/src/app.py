@@ -10,10 +10,18 @@ from src.settings import settings
 logger = get_logger(__name__)
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info(
+        f"{settings.APP_NAME} started in {settings.ENVIRONMENT} mode"
+    )
+    yield
+    logger.info("Application shutdown")
+
+
 # ==================================================
 # FastAPI App
 # ==================================================
-
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -21,6 +29,7 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
+    lifespan=lifespan,
 )
 
 
@@ -36,25 +45,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-logger.info("CORS middleware configured")
-
-
-# ==================================================
-# Startup
-# ==================================================
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    logger.info(f"{settings.APP_NAME} started in {settings.ENVIRONMENT} mode")
-    yield
-    logger.info("Application shutdown")
-
-
-app = FastAPI(
-    title=settings.APP_NAME,
-    version="1.0.0",
-    lifespan=lifespan,
+logger.info(
+    "CORS configured for origins: %s",
+    settings.CORS_ORIGINS,
 )
 
 
