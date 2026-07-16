@@ -14,10 +14,7 @@ class Settings(BaseSettings):
     API_PORT: int = 8003
 
     LOG_LEVEL: str = "INFO"
-
-    CORS_ORIGINS: list[str] = [
-        "http://localhost:5173",
-    ]
+    CORS_ORIGINS: str = "http://localhost:5173"
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
