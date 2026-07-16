@@ -1,0 +1,75 @@
+services:
+
+  #########################################################
+  # Backend
+  #########################################################
+
+  backend:
+    image: ${BACKEND_IMAGE}
+
+    container_name: toy-backend
+
+    restart: unless-stopped
+
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      APP_NAME: ${APP_NAME}
+      ENVIRONMENT: ${ENVIRONMENT}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+
+    
+    
+    
+    
+    expose:
+      - "8003"
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8003/api/v1/health')"
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+    networks:
+      - toy-network
+
+  #########################################################
+  # Web
+  #########################################################
+
+  web:
+    image: ${WEB_IMAGE}
+
+    container_name: toy-web
+
+    restart: unless-stopped
+
+    ports:
+      - "80:80"
+
+    depends_on:
+      backend:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    networks:
+      - toy-network
+
+#########################################################
+
+networks:
+  toy-network:
+    driver: bridge
+    
