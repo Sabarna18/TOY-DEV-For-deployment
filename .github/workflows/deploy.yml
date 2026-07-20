@@ -20,6 +20,8 @@ jobs:
   deploy:
     name: Deploy Production
 
+    # Automatic deployment only after a successful Release workflow.
+    # Manual workflow_dispatch is also allowed.
     if: >
       github.event_name == 'workflow_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
@@ -28,107 +30,152 @@ jobs:
 
     timeout-minutes: 20
 
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      BACKEND_URL: ${{ secrets.BACKEND_URL }}
+      RAILWAY_BACKEND_SERVICE: ${{ secrets.RAILWAY_BACKEND_SERVICE }}
+      RAILWAY_FRONTEND_SERVICE: ${{ secrets.RAILWAY_FRONTEND_SERVICE }}
+
     steps:
+
+      #########################################################
+      # Validate Configuration
+      #########################################################
+
+      - name: Validate Deployment Configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -z "${RAILWAY_TOKEN}" ]; then
+            echo "::error::RAILWAY_TOKEN is not configured."
+            exit 1
+          fi
+
+          if [ -z "${RAILWAY_BACKEND_SERVICE}" ]; then
+            echo "::error::RAILWAY_BACKEND_SERVICE is not configured."
+            exit 1
+          fi
+
+          if [ -z "${RAILWAY_FRONTEND_SERVICE}" ]; then
+            echo "::error::RAILWAY_FRONTEND_SERVICE is not configured."
+            exit 1
+          fi
+
+          if [ -z "${BACKEND_URL}" ]; then
+            echo "::error::BACKEND_URL is not configured."
+            exit 1
+          fi
+
+          echo "Deployment configuration validated."
+
       #########################################################
       # Install Railway CLI
       #########################################################
 
       - name: Install Railway CLI
-
         run: |
-
           npm install -g @railway/cli
 
       #########################################################
-      # Authenticate
+      # Railway CLI Version
       #########################################################
 
-      - name: Authenticate Railway
-
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-
+      - name: Verify Railway CLI
         run: |
-
-          railway whoami
+          railway --version
 
       #########################################################
       # Redeploy Backend
       #########################################################
 
       - name: Redeploy Backend
-
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-
+        shell: bash
         run: |
+          set -euo pipefail
+
+          echo "Triggering backend redeployment..."
 
           railway redeploy \
-            --service "${{ secrets.RAILWAY_BACKEND_SERVICE }}" \
+            --service "${RAILWAY_BACKEND_SERVICE}" \
             --yes
+
+          echo "Backend redeployment triggered."
 
       #########################################################
       # Redeploy Frontend
       #########################################################
 
       - name: Redeploy Frontend
-
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-
+        shell: bash
         run: |
+          set -euo pipefail
+
+          echo "Triggering frontend redeployment..."
 
           railway redeploy \
-            --service "${{ secrets.RAILWAY_FRONTEND_SERVICE }}" \
+            --service "${RAILWAY_FRONTEND_SERVICE}" \
             --yes
 
-      #########################################################
-      # Wait for rollout
-      #########################################################
-
-      - name: Wait for Deployment
-
-        run: |
-
-          echo "Waiting for Railway deployment..."
-
-          sleep 45
+          echo "Frontend redeployment triggered."
 
       #########################################################
       # Backend Health Check
       #########################################################
 
       - name: Backend Health Check
-
-        env:
-          BACKEND_URL: ${{ secrets.BACKEND_URL }}
-
+        shell: bash
         run: |
+          set -euo pipefail
+
+          echo "Waiting for backend deployment to become healthy..."
 
           curl \
             --fail \
+            --silent \
+            --show-error \
             --retry 15 \
             --retry-delay 5 \
             --retry-all-errors \
-            "$BACKEND_URL/api/v1/health"
+            --max-time 10 \
+            "${BACKEND_URL%/}/api/v1/health"
+
+          echo ""
+          echo "Backend health check passed."
 
       #########################################################
       # Deployment Summary
       #########################################################
 
       - name: Deployment Summary
-
+        if: success()
+        shell: bash
         run: |
-
           {
             echo "# 🚀 Production Deployment"
             echo ""
             echo "| Component | Status |"
             echo "|-----------|--------|"
-            echo "| Backend | ✅ |"
-            echo "| Frontend | ✅ |"
-            echo "| Health Check | ✅ |"
+            echo "| Backend redeploy | ✅ Triggered |"
+            echo "| Frontend redeploy | ✅ Triggered |"
+            echo "| Backend health check | ✅ Passed |"
             echo ""
-            echo "Backend URL:"
-            echo "${{ secrets.BACKEND_URL }}"
+            echo "## Backend"
+            echo "${BACKEND_URL}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      #########################################################
+      # Failure Summary
+      #########################################################
+
+      - name: Deployment Failure Summary
+        if: failure()
+        shell: bash
+        run: |
+          {
+            echo "# ❌ Production Deployment Failed"
+            echo ""
+            echo "One or more deployment steps failed."
+            echo ""
+            echo "Check the failed GitHub Actions step and Railway deployment logs."
           } >> "$GITHUB_STEP_SUMMARY"
