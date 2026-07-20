@@ -31,10 +31,10 @@ jobs:
     timeout-minutes: 20
 
     env:
-      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
       BACKEND_URL: ${{ secrets.BACKEND_URL }}
       RAILWAY_BACKEND_SERVICE: ${{ secrets.RAILWAY_SERVICE_ID_BACKEND }}
       RAILWAY_FRONTEND_SERVICE: ${{ secrets.RAILWAY_SERVICE_ID_FRONTEND }}
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
     steps:
 
