@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { APP_CONFIG } from "./config/app";
 import { getTasks, createTask, deleteTask, checkHealth } from "./api";
 
 function App() {
@@ -65,76 +66,82 @@ function App() {
   }, []);
 
   return (
-    <div
-      style={{
-        padding: "2rem",
-        maxWidth: "700px",
-        margin: "0 auto",
-      }}
-    >
-      <h1>Toy Deployment App</h1>
-
-      <h3>Backend Status: {health?.status || "checking..."}</h3>
-
-      <hr />
-
+    <>
       <div
         style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "10px",
-          marginBottom: "20px",
+          padding: "2rem",
+          maxWidth: "700px",
+          margin: "0 auto",
         }}
       >
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Task title"
-        />
+        <h1>Toy Deployment App</h1>
 
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Task description"
-          rows={4}
-        />
+        <h3>Backend Status: {health?.status || "checking..."}</h3>
 
-        <button onClick={handleCreate}>Add Task</button>
-      </div>
+        <hr />
 
-      <hr />
-
-      <h2>Tasks</h2>
-
-      {tasks.length === 0 ? (
-        <p>No tasks found.</p>
-      ) : (
-        <ul
+        <div
           style={{
-            listStyle: "none",
-            padding: 0,
+            display: "flex",
+            flexDirection: "column",
+            gap: "10px",
+            marginBottom: "20px",
           }}
         >
-          {tasks.map((task) => (
-            <li
-              key={task.id}
-              style={{
-                border: "1px solid #ddd",
-                padding: "12px",
-                marginBottom: "12px",
-                borderRadius: "8px",
-              }}
-            >
-              <h3>{task.title}</h3>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Task title"
+          />
 
-              {task.description && <p>{task.description}</p>}
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Task description"
+            rows={4}
+          />
 
-              <button onClick={() => handleDelete(task.id)}>Delete</button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+          <button onClick={handleCreate}>Add Task</button>
+        </div>
+
+        <hr />
+
+        <h2>Tasks</h2>
+
+        {tasks.length === 0 ? (
+          <p>No tasks found.</p>
+        ) : (
+          <ul
+            style={{
+              listStyle: "none",
+              padding: 0,
+            }}
+          >
+            {tasks.map((task) => (
+              <li
+                key={task.id}
+                style={{
+                  border: "1px solid #ddd",
+                  padding: "12px",
+                  marginBottom: "12px",
+                  borderRadius: "8px",
+                }}
+              >
+                <h3>{task.title}</h3>
+
+                {task.description && <p>{task.description}</p>}
+
+                <button onClick={() => handleDelete(task.id)}>Delete</button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="fixed bottom-2 right-3 text-xs text-gray-400 select-none">
+        {APP_CONFIG.VERSION}
+      </div>
+    </>
   );
 }
 
